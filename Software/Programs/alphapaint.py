@@ -180,12 +180,12 @@ class AlphaPaint:
 
         # Snel naar positie boven pen
         self.move_to_machine(x=pen_x, y=pen_y + TOOLCHANGER_Y_SAFE, z=TOOLCHANGER_Z_MAX)
-        # Y naar pen positie
-        self.move_to_machine(y=pen_y)
-        # Z naar pen hoogte
-        self.move_to_machine(z=pen_z)
-        # Z naar 0 (loslaten)
-        self.move_to_machine(z=0)
+        # Langzaam Y naar pen positie (voorkomt stappenverlies)
+        self.draw_to_machine(y=pen_y, feedrate=4000)
+        # Langzaam Z naar pen hoogte
+        self.draw_to_machine(z=pen_z, feedrate=4000)
+        # Langzaam Z naar 0 (loslaten)
+        self.draw_to_machine(z=0, feedrate=4000)
         # Y terug
         self.move_to_machine(y=pen_y + TOOLCHANGER_Y_SAFE)
         # Z omhoog naar pen-hoogte
