@@ -59,12 +59,26 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
     - Richting: 90 graden (omhoog, +Y op het canvas)
     - Pen: neer
     """
+    logo_max_x = 1550  # max aantal stappen in horizontale richting
+    logo_max_y = 850  # max aantal stappen in verticale richting
+    # we gaan er van uit dat de linker-onderhoek (0,0) is
+    logo_start_x = 600
+    logo_start_y = 450
+
     canvas = alpha.canvas
-    huidige_x = canvas.center_x
-    huidige_y = canvas.center_y
+    canvas_max_x = canvas.width
+    canvas_max_y = canvas.height
+
+    # hoeveel moeten we de logo-afstanden vergroten/verkleinen om op de canvas te passen?
+    schaal_x = canvas_max_x / logo_max_x
+    schaal_y = canvas_max_y / logo_max_y
+
     # Standaard LOGO-turtle: start naar boven; in canvas: +Y = omhoog.
     richting_graden = 90.0
     pen_is_neer = True
+    # TODO: hoe weten we of canvas ook linker-onder als (0,0) heeft?
+    huidige_x = logo_start_x * schaal_x
+    huidige_y = logo_start_y * schaal_y
 
     alpha.move_to(huidige_x, huidige_y)
     alpha.pen_down()
@@ -86,8 +100,8 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
                     )
                 afstand = parse_getal(argumenten[0], regelnummer, commando)
                 hoek_rad = math.radians(richting_graden)
-                nieuwe_x = huidige_x + afstand * math.cos(hoek_rad)
-                nieuwe_y = huidige_y + afstand * math.sin(hoek_rad)
+                nieuwe_x = huidige_x + (afstand*schaal_x) * math.cos(hoek_rad)
+                nieuwe_y = huidige_y + (afstand*schaal_y) * math.sin(hoek_rad)
 
                 if pen_is_neer:
                     alpha.draw_to(nieuwe_x, nieuwe_y, wait=False)
