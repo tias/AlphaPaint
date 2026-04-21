@@ -61,7 +61,7 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
     """
     logo_max_x = 1550  # max aantal stappen in horizontale richting
     logo_max_y = 850  # max aantal stappen in verticale richting
-    # we gaan er van uit dat de linker-onderhoek (0,0) is
+    # de linker-onderhoek is (0,0): 0=left/bottom
     logo_start_x = 600
     logo_start_y = 450
 
@@ -76,7 +76,6 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
     # Standaard LOGO-turtle: start naar boven; in canvas: +Y = omhoog.
     richting_graden = 90.0
     pen_is_neer = True
-    # TODO: hoe weten we of canvas ook linker-onder als (0,0) heeft?
     huidige_x = logo_start_x * schaal_x
     huidige_y = logo_start_y * schaal_y
 
