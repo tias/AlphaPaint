@@ -99,7 +99,10 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
                         f"Regel {regelnummer}: VOORUIT verwacht 1 argument, kreeg {len(argumenten)}"
                     )
                 afstand = parse_getal(argumenten[0], regelnummer, commando)
+                # radians: graden * pi / 180 en cos/sin verwacht radians
                 hoek_rad = math.radians(richting_graden)
+                # op een cirkel met straal 1 is 'hoek_rad' het punt x=cos(hoek_rad), y=sin(hoek_rad)
+                # dus vermenigvuldig met (afstand*schaal) om zoveel eenheden erbij te hebben
                 nieuwe_x = huidige_x + (afstand*schaal_x) * math.cos(hoek_rad)
                 nieuwe_y = huidige_y + (afstand*schaal_y) * math.sin(hoek_rad)
 
