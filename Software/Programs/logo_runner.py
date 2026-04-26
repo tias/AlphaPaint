@@ -1,56 +1,60 @@
 #!/usr/bin/env python3
 """
-LOGO-uitvoerder voor AlphaPaint.
+Leest een .logo-bestand en laat de robot tekenen, of toont een voorbeeld op je scherm.
 
-Leest een eenvoudig LOGO-tekstbestand en voert dit uit op AlphaPaint met een
-“turtle”-achtige toestand (positie + richting + penstatus).
+Hoe te gebruiken (in een terminal):
+    python3 logo_runner.py  pad/naar/mijn_tekening.logo
+    python3 logo_runner.py  pad/naar/mijn_tekening.logo  --preview
+    python3 logo_runner.py  pad/naar/mijn_tekening.logo  --preview  300  200
 
-Gebruik:
-    python3 logo_runner.py PAD/NAAR/BESTAND.logo
+--preview  toont de tekening in je normale beeldbekijker in plaats van echt
+te tekenen (er wordt geen PNG in je map bewaard). Met twee
+getallen (breed, hoog, in millimeter) kies je zelf de grootte. Zonder getallen
+leest het programma de grootte van het tekenveld op de machine.
 
-Ondersteunde commando’s (hoofd-/kleine letters door elkaar toegestaan):
-    VOORUIT <afstand>
-    LINKS <graden>
-    RECHTS <graden>
-    PENOP
-    PENNEER
-    PENKLEUR <naam>   (geaccepteerd en gelogd, niet gekoppeld aan pennen)
-    PENDIKTE <waarde> (geaccepteerd en gelogd, geen fysieke lijndikte)
+Commando’s in het .logo-bestand (grote of kleine letters mag):
+    VOORUIT <stappen>   — rechtdoor
+    LINKS <graden>      — draai naar links
+    RECHTS <graden>     — draai naar rechts
+    PENOP               — pen omhoog (geen streep)
+    PENNEER             — pen omlaag (wel streep)
+    PENKLEUR <naam>     — wordt genoteerd, de robot wisselt geen stift
+    PENDIKTE <getal>    — wordt genoteerd, de lijndikte op papier blijft gelijk
 
-Strikte modus:
-    - Onbekende commando’s zijn fouten.
-    - Verkeerd aantal argumenten is een fout.
-    - Niet-numerieke waarden voor numerieke commando’s zijn fouten.
-    - Fouten bevatten regelnummers en stoppen het programma met een foutcode.
+Bij een fout: je ziet in welke regel van het .logo-bestand iets mis is.
 """
 
+from __future__ import annotations
+
+import argparse
 import math
 import sys
 from pathlib import Path
+from typing import Union
 
 from alphapaint import AlphaPaint, AlphaPaintError
+from alphapreview import AlphaPreview
 
 
 class LogoParseFout(Exception):
-    """Fout bij het strikt parsen/uitvoeren van een LOGO-bestand."""
+    """Fout in het .logo-bestand (onbekend commando, verkeerd aantal stukjes, …)."""
 
 
 def log_bericht(bericht: str) -> None:
-    """Schrijf statusberichten naar stderr (zichtbaar in daemon-logs/debugging)."""
+    """Berichten voor ouders / debug: op de scherm-uitvoer (niet in het .logo)."""
     print(f"[logo_runner] {bericht}", file=sys.stderr, flush=True)
 
 
 def parse_getal(token: str, regelnummer: int, commando: str) -> float:
-    """Parse een numeriek argument met duidelijke foutmelding."""
     try:
         return float(token)
     except ValueError as exc:
         raise LogoParseFout(
-            f"Regel {regelnummer}: {commando} verwacht een getal, maar kreeg '{token}'"
+            f"Regel {regelnummer}: bij {commando} hoort een getal, niet '{token}'"
         ) from exc
 
 
-def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
+def voer_logo_uit(alpha: Union[AlphaPaint, AlphaPreview], logo_pad: Path) -> None:
     """
     Voer LOGO-commando’s uit uit een bestand op het AlphaPaint-canvas.
 
@@ -95,7 +99,7 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
             if commando == "VOORUIT":
                 if len(argumenten) != 1:
                     raise LogoParseFout(
-                        f"Regel {regelnummer}: VOORUIT verwacht 1 argument, kreeg {len(argumenten)}"
+                        f"Regel {regelnummer}: bij VOORUIT hoort precies één getal, niet {len(argumenten)}"
                     )
                 afstand = parse_getal(argumenten[0], regelnummer, commando)
                 # radians: graden * pi / 180 en cos/sin verwacht radians
@@ -115,7 +119,7 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
             elif commando == "LINKS":
                 if len(argumenten) != 1:
                     raise LogoParseFout(
-                        f"Regel {regelnummer}: LINKS verwacht 1 argument, kreeg {len(argumenten)}"
+                        f"Regel {regelnummer}: bij LINKS hoort precies één getal, niet {len(argumenten)}"
                     )
                 graden = parse_getal(argumenten[0], regelnummer, commando)
                 richting_graden += graden
@@ -123,7 +127,7 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
             elif commando == "RECHTS":
                 if len(argumenten) != 1:
                     raise LogoParseFout(
-                        f"Regel {regelnummer}: RECHTS verwacht 1 argument, kreeg {len(argumenten)}"
+                        f"Regel {regelnummer}: bij RECHTS hoort precies één getal, niet {len(argumenten)}"
                     )
                 graden = parse_getal(argumenten[0], regelnummer, commando)
                 richting_graden -= graden
@@ -131,7 +135,7 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
             elif commando == "PENOP":
                 if argumenten:
                     raise LogoParseFout(
-                        f"Regel {regelnummer}: PENOP verwacht 0 argumenten, kreeg {len(argumenten)}"
+                        f"Regel {regelnummer}: na PENOP mag niets meer staan, hier staan {len(argumenten)} extra woord(en)"
                     )
                 alpha.pen_up()
                 pen_is_neer = False
@@ -139,7 +143,7 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
             elif commando == "PENNEER":
                 if argumenten:
                     raise LogoParseFout(
-                        f"Regel {regelnummer}: PENNEER verwacht 0 argumenten, kreeg {len(argumenten)}"
+                        f"Regel {regelnummer}: na PENNEER mag niets meer staan, hier staan {len(argumenten)} extra woord(en)"
                     )
                 alpha.pen_down()
                 pen_is_neer = True
@@ -147,56 +151,104 @@ def voer_logo_uit(alpha: AlphaPaint, logo_pad: Path) -> None:
             elif commando == "PENKLEUR":
                 if len(argumenten) != 1:
                     raise LogoParseFout(
-                        f"Regel {regelnummer}: PENKLEUR verwacht 1 argument, kreeg {len(argumenten)}"
+                        f"Regel {regelnummer}: bij PENKLEUR hoort precies één woord, niet {len(argumenten)}"
                     )
                 log_bericht(
-                    f"Regel {regelnummer}: PENKLEUR {argumenten[0]} geaccepteerd (genegeerd: geen pen-mapping)"
+                    f"Regel {regelnummer}: kleur {argumenten[0]} genoteerd (robot wisselt geen stift)"
                 )
 
             elif commando == "PENDIKTE":
                 if len(argumenten) != 1:
                     raise LogoParseFout(
-                        f"Regel {regelnummer}: PENDIKTE verwacht 1 argument, kreeg {len(argumenten)}"
+                        f"Regel {regelnummer}: bij PENDIKTE hoort precies één getal, niet {len(argumenten)}"
                     )
                 dikte = parse_getal(argumenten[0], regelnummer, commando)
                 if dikte <= 0:
                     raise LogoParseFout(
-                        f"Regel {regelnummer}: PENDIKTE moet > 0 zijn, kreeg {dikte}"
+                        f"Regel {regelnummer}: PENDIKTE moet groter dan 0, niet {dikte}"
                     )
                 log_bericht(
-                    f"Regel {regelnummer}: PENDIKTE {dikte:g} geaccepteerd (geen fysieke lijndikte-aansturing)"
+                    f"Regel {regelnummer}: dikte {dikte:g} genoteerd (op papier blijft dezelfde lijn)"
                 )
 
             else:
                 raise LogoParseFout(
-                    f"Regel {regelnummer}: onbekend commando '{delen[0]}'"
+                    f"Regel {regelnummer}: onbekend woord: '{delen[0]}' (kende dat niet)"
                 )
 
     alpha.flush()
 
 
+def _parse_args(argv: list[str] | None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description="Teken op de robot, of kijk eerst op het scherm met een preview-plaatje."
+    )
+    p.add_argument(
+        "logo",
+        type=Path,
+        help="Je .logo-bestand (waar je commando’s in staan).",
+    )
+    p.add_argument(
+        "--preview",
+        nargs="*",
+        default=None,
+        metavar=("BREED", "HOOG"),
+        help="Geen echt tekenen: toon een voorbeeld in je beeldbekijker. Optioneel: breedte en hoogte in mm. "
+        "Zonder cijfers: de grootte van het tekenveld op de machine gebruiken.",
+    )
+    return p.parse_args(argv)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Gebruik: python3 logo_runner.py PAD/NAAR/BESTAND.logo", file=sys.stderr)
+    args = _parse_args(None)
+
+    logo_pad: Path = args.logo
+    if not logo_pad.is_file():
+        print(f"Ik kan dat bestand niet vinden: {logo_pad}", file=sys.stderr)
         sys.exit(1)
 
-    logo_pad = Path(sys.argv[1])
-
-    if not logo_pad.is_file():
-        print(f"Fout: bestand niet gevonden: {logo_pad}", file=sys.stderr)
+    prev = args.preview
+    if prev is not None and len(prev) not in (0, 2):
+        print(
+            "Bij --preview: geen cijfers, óf precies twee (breedte en hoogte in millimeter).",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     try:
-        with AlphaPaint() as alpha:
-            voer_logo_uit(alpha, logo_pad)
-        log_bericht("Uitvoering succesvol afgerond")
+        if prev is None:
+            with AlphaPaint() as alpha:
+                voer_logo_uit(alpha, logo_pad)
+            log_bericht("Klaar, de robot is klaar met tekenen.")
+            sys.exit(0)
+
+        if len(prev) == 0:
+            with AlphaPaint() as ap:
+                w, h = ap.canvas.width, ap.canvas.height
+        else:
+            try:
+                w, h = float(prev[0]), float(prev[1])
+            except ValueError:
+                print("Bij --preview: breedte en hoogte moeten leesbare getallen zijn.", file=sys.stderr)
+                sys.exit(1)
+            if w <= 0 or h <= 0:
+                print("Bij --preview: breedte en hoogte moeten groter dan 0.", file=sys.stderr)
+                sys.exit(1)
+
+        with AlphaPreview(w, h) as preview:
+            voer_logo_uit(preview, logo_pad)
+        log_bericht("Voorbeeld geopend in je beeldbekijker (geen bestand in je map).")
         sys.exit(0)
+
     except LogoParseFout as exc:
-        print(f"Parse-fout: {exc}", file=sys.stderr)
+        print(f"Fout in je .logo-bestand: {exc}", file=sys.stderr)
         sys.exit(2)
     except AlphaPaintError as exc:
-        print(f"AlphaPaint-fout: {exc} (code={exc.code})", file=sys.stderr)
+        print(
+            f"Fout op de teken-robot (AlphaPaint): {exc} (code {exc.code})",
+            file=sys.stderr,
+        )
         sys.exit(3)
     except Exception as exc:
-        print(f"Onverwachte fout: {exc}", file=sys.stderr)
+        print(f"Er ging iets mis: {exc}", file=sys.stderr)
         sys.exit(4)
