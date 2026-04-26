@@ -77,15 +77,14 @@ def voer_logo_uit(
     canvas_max_x = canvas.width
     canvas_max_y = canvas.height
 
-    # Basis: LOGO-stappen → millimeters op het vel; met zoom nóg groter of kleiner
-    schaal_x = (canvas_max_x / logo_max_x) * zoom
-    schaal_y = (canvas_max_y / logo_max_y) * zoom
+    # Herschaal zodat hoogte (y-as) overeenkomt met canvas-hoogte
+    schaal = (canvas_max_y / logo_max_y)
 
     # Standaard LOGO-turtle: start naar boven; in canvas: +Y = omhoog.
     richting_graden = 90.0
     pen_is_neer = True
-    huidige_x = logo_start_x * schaal_x
-    huidige_y = logo_start_y * schaal_y
+    huidige_x = logo_start_x * schaal * zoom
+    huidige_y = logo_start_y * schaal * zoom
 
     alpha.move_to(huidige_x, huidige_y)
     alpha.pen_down()
@@ -110,8 +109,8 @@ def voer_logo_uit(
                 hoek_rad = math.radians(richting_graden)
                 # op een cirkel met straal 1 is 'hoek_rad' het punt x=cos(hoek_rad), y=sin(hoek_rad)
                 # dus vermenigvuldig met (afstand*schaal) om zoveel eenheden erbij te hebben
-                nieuwe_x = huidige_x + (afstand*schaal_x) * math.cos(hoek_rad)
-                nieuwe_y = huidige_y + (afstand*schaal_y) * math.sin(hoek_rad)
+                nieuwe_x = huidige_x + (afstand*schaal*zoom) * math.cos(hoek_rad)
+                nieuwe_y = huidige_y + (afstand*schaal*zoom) * math.sin(hoek_rad)
 
                 if pen_is_neer:
                     alpha.draw_to(nieuwe_x, nieuwe_y, wait=False)
