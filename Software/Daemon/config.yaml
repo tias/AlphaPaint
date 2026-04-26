@@ -39,8 +39,8 @@ external_programs:
 
   button_f:
     enabled: true
-    name: "Pentest"
-    command: "/home/tom/AlphaPaint/Software/Programs/pentest.py"
+    name: "Logo Robot"         # Human-readable name for logging
+    command: "/home/tom/AlphaPaint/Software/Programs/logo_runner.py ../../Examples/ROBOT.logo"               # Path to executable (e.g., /home/pi/programs/spiral.py)
     args: []
     timeout: 0
 
