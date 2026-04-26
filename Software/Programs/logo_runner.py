@@ -6,6 +6,10 @@ Hoe te gebruiken (in een terminal):
     python3 logo_runner.py  pad/naar/mijn_tekening.logo
     python3 logo_runner.py  pad/naar/mijn_tekening.logo  --preview
     python3 logo_runner.py  pad/naar/mijn_tekening.logo  --preview  300  200
+    python3 logo_runner.py  pad/naar/mijn_tekening.logo  --zoom 1.2
+
+--zoom  vergroot of verkleint de tekening op het vel (1.0 = normaal, 1.2 = 20% groter,
+0.5 = half zo klein). Werkt bij de robot en bij --preview.
 
 --preview  toont de tekening in je normale beeldbekijker in plaats van echt
 te tekenen (er wordt geen PNG in je map bewaard). Met twee
@@ -54,14 +58,14 @@ def parse_getal(token: str, regelnummer: int, commando: str) -> float:
         ) from exc
 
 
-def voer_logo_uit(alpha: Union[AlphaPaint, AlphaPreview], logo_pad: Path) -> None:
+def voer_logo_uit(
+    alpha: Union[AlphaPaint, AlphaPreview], logo_pad: Path, *, zoom: float = 1.0
+) -> None:
     """
-    Voer LOGO-commando’s uit uit een bestand op het AlphaPaint-canvas.
+    Voer LOGO-commando’s uit op het tekenveld (robot of preview).
 
-    Begin toestand:
-    - Positie: midden van het canvas
-    - Richting: 90 graden (omhoog, +Y op het canvas)
-    - Pen: neer
+    ``zoom`` vermenigvuldigt alle afstanden in millimeter: 1.2 is 1,2× groter,
+    0,5 is half zo klein. Startpositie en alle ``VOORUIT``-stappen schalen mee.
     """
     logo_max_x = 1550  # max aantal stappen in horizontale richting
     logo_max_y = 850  # max aantal stappen in verticale richting
@@ -73,9 +77,9 @@ def voer_logo_uit(alpha: Union[AlphaPaint, AlphaPreview], logo_pad: Path) -> Non
     canvas_max_x = canvas.width
     canvas_max_y = canvas.height
 
-    # hoeveel moeten we de logo-afstanden vergroten/verkleinen om op de canvas te passen?
-    schaal_x = canvas_max_x / logo_max_x
-    schaal_y = canvas_max_y / logo_max_y
+    # Basis: LOGO-stappen → millimeters op het vel; met zoom nóg groter of kleiner
+    schaal_x = (canvas_max_x / logo_max_x) * zoom
+    schaal_y = (canvas_max_y / logo_max_y) * zoom
 
     # Standaard LOGO-turtle: start naar boven; in canvas: +Y = omhoog.
     richting_graden = 90.0
@@ -196,6 +200,14 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="Geen echt tekenen: toon een voorbeeld in je beeldbekijker. Optioneel: breedte en hoogte in mm. "
         "Zonder cijfers: de grootte van het tekenveld op de machine gebruiken.",
     )
+    p.add_argument(
+        "--zoom",
+        type=float,
+        default=1.0,
+        metavar="FACTOR",
+        help="Grootte van de tekening: 1.0 = normaal, 1.2 = 20%% groter, 0.5 = half. "
+        "Geldt voor de robot en voor --preview.",
+    )
     return p.parse_args(argv)
 
 
@@ -215,10 +227,15 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
+    z = args.zoom
+    if z <= 0 or not math.isfinite(z):
+        print("Bij --zoom: het getal moet groter dan 0 (en een normaal cijfer).", file=sys.stderr)
+        sys.exit(1)
+
     try:
         if prev is None:
             with AlphaPaint() as alpha:
-                voer_logo_uit(alpha, logo_pad)
+                voer_logo_uit(alpha, logo_pad, zoom=z)
             log_bericht("Klaar, de robot is klaar met tekenen.")
             sys.exit(0)
 
@@ -236,7 +253,7 @@ if __name__ == "__main__":
                 sys.exit(1)
 
         with AlphaPreview(w, h) as preview:
-            voer_logo_uit(preview, logo_pad)
+            voer_logo_uit(preview, logo_pad, zoom=z)
         log_bericht("Voorbeeld geopend in je beeldbekijker (geen bestand in je map).")
         sys.exit(0)
 
