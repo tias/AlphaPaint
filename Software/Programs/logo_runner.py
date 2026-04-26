@@ -86,6 +86,7 @@ def voer_logo_uit(
     huidige_x = logo_start_x * schaal * zoom
     huidige_y = logo_start_y * schaal * zoom
 
+    alpha.move_to(10, 10)  # eerste zet lijkt beinvloed door startpositie, begin met een onbelangerijke zet
     alpha.move_to(huidige_x, huidige_y)
     alpha.pen_down()
 
