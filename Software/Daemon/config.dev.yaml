@@ -36,11 +36,11 @@ external_programs:
     timeout: 300
 
   button_f:
-    enabled: true
-    name: "Grid"
-    command: "/home/tom/AlphaPaint/Software/Programs/grid.py"
-    args: []
-    timeout: 300
+    enabled: true            # Set to true to use external program instead of line drawing
+    name: "Logo Robot"         # Human-readable name for logging
+    command: "/home/tom/AlphaPaint/Software/Programs/logo_runner.py ../../Examples/ROBOT.logo"               # Path to executable (e.g., /home/pi/programs/spiral.py)
+    args: []                  # Command line arguments
+    timeout: 0              # Maximum runtime in seconds (0 = unlimited)
 
   button_g:
     enabled: true

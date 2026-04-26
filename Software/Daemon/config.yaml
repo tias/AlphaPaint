@@ -31,11 +31,11 @@ debugging:
 # Programs communicate via stdin/stdout JSON protocol.
 external_programs:
   button_e:
-    enabled: true            # Set to true to use external program instead of line drawing
-    name: "Logo Robot"         # Human-readable name for logging
-    command: "/home/tom/AlphaPaint/Software/Programs/logo_runner.py ../../Examples/ROBOT.logo"               # Path to executable (e.g., /home/pi/programs/spiral.py)
+    enabled: false            # Set to true to use external program instead of line drawing
+    name: "Program 1"         # Human-readable name for logging
+    command: ""               # Path to executable (e.g., /home/pi/programs/spiral.py)
     args: []                  # Command line arguments
-    timeout: 0              # Maximum runtime in seconds (0 = unlimited)
+    timeout: 300              # Maximum runtime in seconds (0 = unlimited)
 
   button_f:
     enabled: true
