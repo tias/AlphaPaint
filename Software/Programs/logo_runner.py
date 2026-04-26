@@ -59,7 +59,7 @@ def parse_getal(token: str, regelnummer: int, commando: str) -> float:
 
 
 def voer_logo_uit(
-    alpha: Union[AlphaPaint, AlphaPreview], logo_pad: Path, *, zoom: float = 1.0
+    alpha: Union[AlphaPaint, AlphaPreview], logo_pad: Path, zoom: float = 1.0
 ) -> None:
     """
     Voer LOGO-commando’s uit op het tekenveld (robot of preview).
